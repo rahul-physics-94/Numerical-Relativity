@@ -59,10 +59,13 @@ using PlotlyJS
 plot(R_0, H_initial)
 # H, R, v are defined
 # We run the RK4 scheme to calculate the value of R across the grid.
+
 u = range(-100, 10, length = 110001)
 v_range = range(0,150,length = 110001)
-using SparseArrays
-R_grid = spzeros(110001,110001)
+using Distributed
+addprocs(4)
+@everywhere using SharedArrays
+R_grid = SharedArray{Float64}(110001,110001)
 R_grid[1,:] = R_0
 # writing the ODE function
 function dR_du(u, R)
@@ -78,10 +81,10 @@ function rk4(u, R, du)
     k4 = dR_du(u + du, R+ du*k3)
     return R + (du/6) * (k1 + 2*k2 + 2*k3 + k4)
 end
-for j in 1:110001
+Threads.@threads for j in 1:110001 
     for i in 2:110001
         u_vals = u[i-1]
         du = u[i] - u_vals
-        R_grid[i, j] = rk4(u_vals, R_grid[i-1, j], du)
+        R_grid[j, i] = rk4(u_vals, R_grid[j, i-1], du)
     end
 end
