@@ -44,7 +44,7 @@ end
 #6. Derivative of R wrt u for the Runge Kutta scheme
 
 function dR_du(u,R)
-    return 0.5*g(u,R)
+    return -0.5*g(u,R)
 end
 
 #7. Finding the initial value of the scalar function along R0
@@ -106,10 +106,21 @@ for i in 2:20000
         R_grid[j, i] = rk4(u[i-1], R_grid[j, i-1], du)
     end
 end
+
 R_trace = @view R_grid[18000,:]
 using PlotlyJS
 plt = plot(
     v,
-    R_grid
+    R_trace
 )
 display(plt)
+
+# Writing the loop for calculating the value of the scalar field.
+#H = Array{Float64}(undef, 20000, 20000)
+
+
+#for i in 1:20000
+ #   @inbounds for j in 1:20000
+
+
+
