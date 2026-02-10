@@ -1,13 +1,14 @@
-# Define the function f(R) based on the equation in the image
+#Setting up all the required functions
+###########################################
+# 1. To calculate the absolute value of v
 function f(R, v)
     numerator = R * exp(1 / (3 - 50 * R))
     denominator = (2 + (200 * R) / 3)^(4 / 9) * (2 - (100 * R) / 3)^(5 / 9)
     return v - (numerator / denominator)
 end
 
-# Define the derivative of the function f(R) with respect to R
+# 2. Finding the derivative using the central difference method. Absolute derivative might make the equations not converge.
 function df(R, v)
-    # Approximate the derivative using central difference method
     h = 1e-6
     return (f(R + h, v) - f(R - h, v)) / (2 * h)
 end
@@ -25,24 +26,51 @@ function newton(f, df, R0, v; tol=1e-6, maxiter=1000)
     error("Newton's method did not converge")
 end
 
-# Array to store final converged values of R
-# This is the value along the intial hypersurface
-R_0 = Float64[] 
-v = LinRange(0.0000, 150, 110001)
-# Initial conditions
-let R_initial = 0.025  # Initial guess for R
+#3. Finding the value of g(u,R)
+function g(u,R)
+    return (1/6)*u*R^3 + (1/54)* u^2*R^4
+end
+
+#4. Finding the derivatives of g wrt R
+function dg_dR(u, R)
+    return 0.5*u*R^2 + (1/9)*u^2^R^3
+end
+
+#5. Finding the second derivative of g wrt R
+
+function dg2_dR2(u, R)
+    return u*R + (1/3)*u^2*R^2
+end
+#6. Derivative of R wrt u for the Runge Kutta scheme
+
+function dR_du(u,R)
+    return 0.5*g(u,R)
+end
+
+#7. Finding the initial value of the scalar function along R0
+
+function Initial_Function(R)
+    H_0 = R^2 * (0.0525 - R)^2
+end
+
+####################################################
+#Creating the grid using values of u and v
+u = LinRange(-100, 10, 20000)
+v = LinRange(0,150,20000)
+
+#Finding the values of R along the grid using Newton Method and Runge Kutta scheme
+R_0 = Float64[]
+let R_initial = 0.025
     for v in v
-    R_solution = newton(f, df, R_initial, v)
-    R_initial = R_solution
-    push!(R_0, R_solution) # Update R0 to the last converged value of R
+        R_solution = newton(f, df, R_initial, v)
+        R_initial = R_solution
+        push!(R_0, R_solution) # Update R0 to the last converged value of R
     end
 end
 using PlotlyJS
 plot(R_0, v)
 
-function Initial_Function(R)
-    H_0 = R^2 * (0.0525 - R)^2
-end
+#Finding the values of the scalar function along the initial grid point
 
 H_initial = Float64[]
 for R in R_0
@@ -59,19 +87,9 @@ using PlotlyJS
 plot(R_0, H_initial)
 # H, R, v are defined
 # We run the RK4 scheme to calculate the value of R across the grid.
-
-u = range(-100, 10, length = 110001)
-v_range = range(0,150,length = 110001)
-using Distributed
-addprocs(4)
-@everywhere using SharedArrays
-R_grid = SharedArray{Float64}(110001,110001)
-R_grid[1,:] = R_0
-# writing the ODE function
-function dR_du(u, R)
-    g = (R^2/6)*(u*R + (u^2 * R^2)/9)
-    return (- 0.5 * g)
-end
+GC.gc()
+R_grid = Array{Float64}(undef,20000,20000)
+R_grid[:,1] .= R_0
 
 #RK4 Steps
 function rk4(u, R, du)
@@ -81,8 +99,8 @@ function rk4(u, R, du)
     k4 = dR_du(u + du, R+ du*k3)
     return R + (du/6) * (k1 + 2*k2 + 2*k3 + k4)
 end
-Threads.@threads for j in 1:110001 
-    for i in 2:110001
+for j in 1:20000
+    for i in 2:20000
         u_vals = u[i-1]
         du = u[i] - u_vals
         R_grid[j, i] = rk4(u_vals, R_grid[j, i-1], du)
