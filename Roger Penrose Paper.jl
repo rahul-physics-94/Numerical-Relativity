@@ -84,12 +84,12 @@ for R in R_0
     end
 end
 using PlotlyJS
-plot(R_0, H_initial)
+display(plot(R_0, H_initial))
 # H, R, v are defined
 # We run the RK4 scheme to calculate the value of R across the grid.
-GC.gc()
+#GC.gc()
 R_grid = Array{Float64}(undef,20000,20000)
-R_grid[:,1] .= R_0
+R_grid[:,1] = R_0
 
 #RK4 Steps
 function rk4(u, R, du)
@@ -99,10 +99,10 @@ function rk4(u, R, du)
     k4 = dR_du(u + du, R+ du*k3)
     return R + (du/6) * (k1 + 2*k2 + 2*k3 + k4)
 end
-for j in 1:20000
-    for i in 2:20000
-        u_vals = u[i-1]
-        du = u[i] - u_vals
-        R_grid[j, i] = rk4(u_vals, R_grid[j, i-1], du)
+for i in 1:20000
+    for j in 2:20000
+        u_vals = u[j-1]
+        du = u[j] - u_vals
+        R_grid[j, i] = rk4(u_vals, R_grid[j-1, i], du)
     end
 end
