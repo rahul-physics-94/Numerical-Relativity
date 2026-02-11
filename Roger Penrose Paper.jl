@@ -33,7 +33,7 @@ end
 
 #4. Finding the derivatives of g wrt R
 function dg_dR(u, R)
-    return 0.5*u*R^2 + (1/9)*u^2^R^3
+    return 0.5*u*R^2 + (1/9)*u^2*R^3
 end
 
 #5. Finding the second derivative of g wrt R
@@ -73,14 +73,25 @@ plot(R_0, v)
 #Finding the values of the scalar function along the initial grid point
 
 H_initial = Float64[]
+q_inital = Float64[]
+f_initial = Float64[]
 for R in R_0
+    u0 = -100
     if R <= 0.0525
         H = Initial_Function(R)
         push!(H_initial, H)
+        q = 2*R*(0.0525)^2 - 6*0.0525*R^2 + 4*R^3
+        push!(q_inital, q)
+        f = q*dg_dR(u0,R) + H*(0.5*dg2_dR2(u0,R) - 1)
+        push!(f_initial, f)
     end
     if R > 0.0525
         H = 0
         push!(H_initial, H)
+        q = 0
+        push!(q_inital,q)
+        f = 0
+        push!(f_initial,f)
     end
 end
 using PlotlyJS
@@ -107,20 +118,42 @@ for i in 2:20000
     end
 end
 
-R_trace = @view R_grid[18000,:]
+R_trace = @view R_grid[10000,:]
 using PlotlyJS
 plt = plot(
-    v,
+    u,
     R_trace
 )
 display(plt)
 
 # Writing the loop for calculating the value of the scalar field.
-#H = Array{Float64}(undef, 20000, 20000)
+H_grid = Array{Float64}(undef, 20000, 20000)
+H_grid[:,1] = H_initial
+q_grid = Array{Float64}(undef, 20000,20000)
+q_grid[:,1] = q_inital
+f_grid = Array{Float64}(undef,20000,20000)
+f_grid[:,1] = f_initial
 
+for i in 2:20000
+    du = u[i] - u[i-1]
+    @inbounds for j in 1:20000
+        q_grid[j,i] = q_grid[j,i-1] + f_grid[j,i-1]*du
+        H_grid[j,i] = H_grid[j,i-1] + q_grid[j,i-1]*(R_grid[j,i]- R_grid[j,i-1])
+        f_grid[j,i] = q_grid[j,i]*dg_dR(u[j],R_grid[j,i]) + H_grid[j,i]*((0.5*dg2_dR2(u[j], R_grid[j, i]))-1)
+    end
+end
 
-#for i in 1:20000
- #   @inbounds for j in 1:20000
+target = -50
+tolerance = 0.01
 
+index = findfirst(x -> abs(x - target) <= tolerance, u)
 
+H_slice = H_grid[1000,:]
+R_slice = R_grid[1000,:]
 
+using PlotlyJS
+plot(v, H_slice,
+     xlabel="R",
+     ylabel="H",
+     title="H vs v at u = $(u[j0])")
+    
