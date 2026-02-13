@@ -27,18 +27,18 @@ function newton(f, df, R0, v; tol=1e-6, maxiter=1000)
 end
 
 #3. Finding the value of g(u,R)
-function g(u,R)
+@inline function g(u,R)
     return (1/6)*u*R^3 + (1/54)* u^2*R^4
 end
 
 #4. Finding the derivatives of g wrt R
-function dg_dR(u, R)
+@inline function dg_dR(u, R)
     return 0.5*u*R^2 + (1/9)*u^2*R^3
 end
 
 #5. Finding the second derivative of g wrt R
 
-function dg2_dR2(u, R)
+@inline function dg2_dR2(u, R)
     return u*R + (1/3)*u^2*R^2
 end
 #6. Derivative of R wrt u for the Runge Kutta scheme
@@ -67,8 +67,8 @@ let R_initial = 0.025
         push!(R_0, R_solution) # Update R0 to the last converged value of R
     end
 end
-using PlotlyJS
-plot(R_0, v)
+#using PlotlyJS
+#PlotlyJS.plot(R_0, v)
 
 #Finding the values of the scalar function along the initial grid point
 
@@ -94,8 +94,8 @@ for R in R_0
         push!(f_initial,f)
     end
 end
-using PlotlyJS
-display(plot(R_0, H_initial))
+#using PlotlyJS
+#display(PlotlyJS.plot(R_0, H_initial))
 # H, R, v are defined
 # We run the RK4 scheme to calculate the value of R across the grid.
 GC.gc()
@@ -111,20 +111,20 @@ R_grid[:,1] = R_0
     return R + (du/6) * (k1 + 2*k2 + 2*k3 + k4)
 end
 
-for i in 2:20000
+@inbounds for i in 2:20000
     du = u[i] - u[i-1]
     @inbounds for j in 1:20000
         R_grid[j, i] = rk4(u[i-1], R_grid[j, i-1], du)
     end
 end
 
-R_trace = @view R_grid[10000,:]
-using PlotlyJS
-plt = plot(
-    u,
-    R_trace
-)
-display(plt)
+#R_trace = @view R_grid[10000,:]
+#using PlotlyJS
+#plt = PlotlyJS.plot(
+ #   u,
+  #  R_trace
+#)
+#display(plt)
 
 # Writing the loop for calculating the value of the scalar field.
 H_grid = Array{Float64}(undef, 20000, 20000)
@@ -134,26 +134,32 @@ q_grid[:,1] = q_inital
 f_grid = Array{Float64}(undef,20000,20000)
 f_grid[:,1] = f_initial
 
-for i in 2:20000
+@inbounds for i in 2:20000
     du = u[i] - u[i-1]
     @inbounds for j in 1:20000
         q_grid[j,i] = q_grid[j,i-1] + f_grid[j,i-1]*du
         H_grid[j,i] = H_grid[j,i-1] + q_grid[j,i-1]*(R_grid[j,i]- R_grid[j,i-1])
-        f_grid[j,i] = q_grid[j,i]*dg_dR(u[j],R_grid[j,i]) + H_grid[j,i]*((0.5*dg2_dR2(u[j], R_grid[j, i]))-1)
+        f_grid[j,i] = q_grid[j,i]*dg_dR(u[i],R_grid[j,i]) + H_grid[j,i]*((0.5*dg2_dR2(u[i], R_grid[j, i]))-1)
     end
 end
 
-target = -50
-tolerance = 0.01
 
-index = findfirst(x -> abs(x - target) <= tolerance, u)
+index = findall(x -> abs(x) != 0, H_grid)
 
-H_slice = H_grid[1000,:]
-R_slice = R_grid[1000,:]
+index_2 = findall(x -> abs(x) > 0.0525, R_grid)
+
+index_3 = findall(x -> x <= -8, u)
+H_slice = H_grid[32,:]
+R_slice = R_grid[32,:]
+
 
 using PlotlyJS
-plot(v, H_slice,
+slice_plot = PlotlyJS.plot(R_slice, H_slice,
      xlabel="R",
      ylabel="H",
-     title="H vs v at u = $(u[j0])")
+)  
+display(slice_plot)
+
+#using Plots; pyplot();
+#plot(u,R_grid,H_grid,st=:surface,camera=(-30,30))
     
