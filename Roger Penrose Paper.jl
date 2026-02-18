@@ -55,8 +55,8 @@ end
 
 ####################################################
 #Creating the grid using values of u and v
-u = LinRange(-100, 10, 20000)
-v = LinRange(0,150,20000)
+u = range(-100, 10; step = 0.005)
+v = range(0,550;step = 0.005)
 
 #Finding the values of R along the grid using Newton Method and Runge Kutta scheme
 R_0 = Float64[]
@@ -162,4 +162,4 @@ display(slice_plot)
 
 #using Plots; pyplot();
 #plot(u,R_grid,H_grid,st=:surface,camera=(-30,30))
-    
+-8.00 in u
