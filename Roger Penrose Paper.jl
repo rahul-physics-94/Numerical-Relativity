@@ -60,7 +60,7 @@ v = LinRange(0,150,20000)
 
 #Finding the values of R along the grid using Newton Method and Runge Kutta scheme
 R_0 = Float64[]
-let R_initial = 0.025
+let R_initial = 0
     for v in v
         R_solution = newton(f, df, R_initial, v)
         R_initial = R_solution
@@ -94,8 +94,8 @@ for R in R_0
         push!(f_initial,f)
     end
 end
-#using PlotlyJS
-#display(PlotlyJS.plot(R_0, H_initial))
+using PlotlyJS
+display(PlotlyJS.plot(R_0, H_initial))
 # H, R, v are defined
 # We run the RK4 scheme to calculate the value of R across the grid.
 GC.gc()
