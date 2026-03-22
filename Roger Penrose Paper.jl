@@ -1,20 +1,21 @@
 #Setting up all the required functions
 ###########################################
 # 1. To calculate the absolute value of v
-function f(R, v)
+GC.gc()
+@inline function f(R, v)
     numerator = R * exp(1 / (3 - 50 * R))
     denominator = (2 + (200 * R) / 3)^(4 / 9) * (2 - (100 * R) / 3)^(5 / 9)
     return v - (numerator / denominator)
 end
 
 # 2. Finding the derivative using the central difference method. Absolute derivative might make the equations not converge.
-function df(R, v)
+@inline function df(R, v)
     h = 1e-6
     return (-f(R + 2*h, v) + (8*f(R + h, v))-(8*f(R - h,v))+f(R - 2*h, v)) / (12 * h)
 end
 
 # Newton's method implementation
-function newton(f, df, R0, v; tol=1e-6, maxiter=10000)
+@inline function newton(f, df, R0, v; tol=1e-6, maxiter=10000)
     R = R0
     for i in 1:maxiter
         R_new = R - (f(R, v) / df(R, v))
@@ -49,7 +50,7 @@ end
 
 #7. Finding the initial value of the scalar function along R0
 
-function Initial_Function(u0,R)
+@inline function Initial_Function(u0,R)
     H_0 = (R^2 * (0.0525 - R)^2)*10^8
     q_0 = (2*R*(0.0525)^2 - 6*0.0525*R^2 + 4*R^3)*10^8
     f = (q_0*dg_dR(u0,R) + H_0*(0.5*dg2_dR2(u0,R) - 1))*10^8
@@ -170,17 +171,50 @@ end
 #Rewriting the loop
 #This includes working inside the loop with all the values and having to not store the whole grid values
 #but slice them at specific point
-
+# du = 0.001
+# u = round.([(-100.0 + (i-1)*du) for i in 1:110000], digits = 3)
+# dv = 0.005
+# v = [(0 + (i-1)*dv) for i in 1:110000]
+# R_0 = Float32[]
+# u0 = -100
+# let R_initial = 0
+#     for i in v
+#         R_solution = newton(f, df, R_initial, i)
+#         R_initial = R_solution
+#         push!(R_0, R_solution)
+#     end
+# end
+# R_curr = Vector{Float32}(undef, 110000)
+# R_prev = Vector{Float32}(undef, 110000)
+# H_curr = Vector{Float32}(undef, 110000)
+# H_prev = Vector{Float32}(undef, 110000)
+# q_curr = Vector{Float32}(undef, 110000)
+# q_prev = Vector{Float32}(undef, 110000)
+# f_q_curr = Vector{Float32}(undef, 110000)
+# f_q_prev = Vector{Float32}(undef, 110000)
+# for j in 1:11000
+#     if R_0[j] <= 0.0525
+#         H_prev[j], q_prev[j], f_q_prev[j] = Initial_Function(u0, R_0[j])
+#     else
+#         H_prev[j] = 0
+#         q_prev[j] = 0
+#         f_q_prev[j] = 0
+#     end
+#     R_prev[j] = R_0[j]
+# end
+# plot_initial = PlotlyJS.plot(R_prev, H_prev, xlabel="R", ylabel="H")
+# display(plot_initial)
+using InvertedIndices
+using LoopVectorization
 using PlotlyJS
 function Penrose_Smith()
-    du = 0.001
-    u = round.([(-100.0 + (i-1)*du) for i in 1:110001], digits = 3)
-    dv = 0.005
-    v = [(0 + (i-1)*dv) for i in 1:110001]
-    uslice = [-100.0, -8.0, -0.340, 0.0, 1.200, 10.0]
+    du = 0.0001
+    u = round.([(-100.0 + (i-1)*du) for i in 1:1100001], digits = 4)
+    dv = 0.0005
+    v = [(0 + (i-1)*dv) for i in 1:1100001]
+    uslice = [-8.0, -0.340, 0.0, 1.200, 10.0]
     R_0 = Float32[]
     u0 = -100
-    v0 = 0
     let R_initial = 0
         for i in v
             R_solution = newton(f, df, R_initial, i)
@@ -188,47 +222,54 @@ function Penrose_Smith()
             push!(R_0, R_solution)
         end
     end
-    R_prev = zeros(Float32, 110001)
-    R_curr = zeros(Float32, 110001)
-    H_prev = zeros(Float32, 110001)
-    H_curr = zeros(Float32, 110001)
-    q_prev = zeros(Float32, 110001)
-    q_curr = zeros(Float32, 110001)
-    f_prev = zeros(Float32, 110001)
-    f_curr = zeros(Float32, 110001)
-    @inbounds for i in 1:110001
-        @inbounds for j in 1:110001
-            if i == 1
-                if R_0[j] <= 0.0525
-                    H, q, f= Initial_Function(u0, R_0[j])
-                    H_prev[j] = H
-                    q_prev[j] = q
-                    f_prev[j] = f
-                else
-                    H_prev[j] = 0
-                    q_prev[j] = 0
-                    f_prev[j] = 0
-                end
-                R_prev[j] = R_0[j]
-            end
-            if i > 1
-                R_curr[j] = rk4(u[i-1], R_prev[j], du)
-                q_curr[j] = q_prev[j] + (f_prev[j]*du)
-                H_curr[j] = H_prev[j] + (q_prev[j]*(R_curr[j] - R_prev[j]))
-                f_curr[j] = q_curr[j]*dg_dR(u[i], R_curr[j]) + (H_curr[j]*(dg2_dR2(u[i], R_curr[j]) - 1))
-                
-            end
+    R_curr = zeros(Float32, 1100001)
+    R_prev = zeros(Float32, 1100001)
+    H_curr = zeros(Float32, 1100001)
+    H_prev = zeros(Float32, 1100001)
+    q_curr = zeros(Float32, 1100001)
+    q_prev = zeros(Float32, 1100001)
+    f_q_curr = zeros(Float32, 1100001)
+    f_q_prev = zeros(Float32, 1100001)
+    for j in 1:1100001
+        if R_0[j] <= 0.0525
+            H_prev[j], q_prev[j], f_q_prev[j] = Initial_Function(u0, R_0[j])
+        else
+            H_prev[j] = 0
+            q_prev[j] = 0
+            f_q_prev[j] = 0
+        end
+        R_prev[j] = R_0[j]
+    end
+    plot_initial = PlotlyJS.plot(R_prev, H_prev, xlabel="R", ylabel="H")
+    display(plot_initial)
+    @inbounds for i in 2:1100001
+        R_curr[1] = 0
+        q_curr[1] = 0
+        H_curr[1] = 0
+        f_q_curr[1] = 0
+        @inbounds for j in 2:1100001
+            R_curr[j] = rk4(u[i-1], R_prev[j], du)
+            q_curr[j] = muladd(f_q_prev[j], du, q_prev[j])
+            H_curr[j] = muladd(q_curr[j-1], (R_curr[j] - R_curr[j-1]), H_curr[j-1])
+            f_q_curr[j] = muladd(H_curr[j],(dg2_dR2(u[i], R_curr[j]) - 1), q_curr[j]*dg_dR(u[i], R_curr[j]))
         end
         if u[i] in uslice
-            display(plot(R_prev, H_prev, xlabel="R", ylabel="H", title="u = $(u[i])"))
+            plot = PlotlyJS.plot(R_curr, log10.(abs.(H_curr)), xlabel="R", ylabel="H", title="u = $(u[i])")
+            display(plot)
         end
-        copy!(R_prev, R_curr)
-        copy!(H_prev,H_curr)
-        copy!(q_prev,q_curr)
-        copy!(f_prev,f_curr)
-        println(i)
+        copyto!(R_prev, R_curr)
+        copyto!(q_prev, q_curr)
+        copyto!(f_q_prev, f_q_curr)
+        println("Completed iteration for u = $(u[i])")
     end
-    return H_curr, q_curr, R_curr, f_curr
+    empty!(R_prev)
+    empty!(R_curr)
+    empty!(H_prev)
+    empty!(H_curr)
+    empty!(q_prev)
+    empty!(q_curr)
+    empty!(f_q_prev)
+    empty!(f_q_curr)    
 end  
 
 solution = Penrose_Smith()
