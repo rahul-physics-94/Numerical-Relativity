@@ -1,3 +1,6 @@
+**Roger Penrose Paper**
+
+
 **Numerical Evolution of Reissner-Nordström Internal Instability**
 
 This repository contains a Julia implementation of the numerical framework established by Simpson and Penrose in their seminal paper, "Internal instability in a Reissner-Nordström black hole".The project simulates the behaviour of a scalar field $H$ within the interior of a charged black hole, specifically investigating the stability of the Cauchy horizon using a double-null coordinate system $(u, v)$.
