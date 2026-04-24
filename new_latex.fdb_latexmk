@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1777065723.45021 "/Users/rahulrai/Numerical Relativity Project/Numerical-Relativity/new_latex.tex" "new_latex.pdf" "new_latex" 1777065724.16302 0
-  "/Users/rahulrai/Numerical Relativity Project/Numerical-Relativity/new_latex.tex" 1777065723.16527 577 2d1f5caadd3922f97052f894eef8ad2a ""
+["pdflatex"] 1777066267.0257 "/Users/rahulrai/Numerical Relativity Project/Numerical-Relativity/new_latex.tex" "new_latex.pdf" "new_latex" 1777066267.53125 0
+  "/Users/rahulrai/Numerical Relativity Project/Numerical-Relativity/new_latex.tex" 1777066266.76467 406 bc05000c0d36a632b10b1b9d9de9e7d3 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/tfm/jknappen/ec/tcrm1200.tfm" 1136768653 1536 74b7293ec3713bb7fdca8dd1bd1f469c ""
@@ -60,9 +60,9 @@
   "/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1777064013 5573038 b99aad5e4898a9034e953632f940512b ""
   "/usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt" 1777063970 3636773 53720c48ab1cb43003482250f08603a7 ""
   "/usr/local/texlive/2026/texmf.cnf" 1774209515 577 648cd9f92f9c0eac486f4c71c85cfbbe ""
-  "new_latex.aux" 1777065724.12001 271 0fcd30974b3131590636e62d3f632b2b "pdflatex"
-  "new_latex.out" 1777065724.12057 103 9814c2d956916adb9290eca4e25c967a "pdflatex"
-  "new_latex.tex" 1777065723.16527 577 2d1f5caadd3922f97052f894eef8ad2a ""
+  "new_latex.aux" 1777066267.49262 271 0fcd30974b3131590636e62d3f632b2b "pdflatex"
+  "new_latex.out" 1777066267.49311 103 9814c2d956916adb9290eca4e25c967a "pdflatex"
+  "new_latex.tex" 1777066266.76467 406 bc05000c0d36a632b10b1b9d9de9e7d3 ""
   (generated)
   "new_latex.aux"
   "new_latex.log"
